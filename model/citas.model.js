@@ -13,6 +13,7 @@ export const CitasModel = {
       LEFT JOIN pets p ON c.pet_id = p.id
       LEFT JOIN employees e ON c.employee_id = e.id
       LEFT JOIN services s ON c.service_id = s.id
+      ORDER BY c.date DESC, c.time DESC
     `);
     return rows;
   },
@@ -36,72 +37,35 @@ export const CitasModel = {
   },
 
   async create(data) {
-    const {
-      client_id,
-      pet_id,
-      service_id,
-      employee_id,
-      date,
-      time,
-      notes,
-      motivo
-    } = data;
+    const { client_id, pet_id, service_id, employee_id, date, time, notes, motivo } = data;
 
     const [result] = await db.query(
       `INSERT INTO citas
        (client_id, pet_id, service_id, employee_id, date, time, notes, motivo, alta)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
-      [
-        client_id,
-        pet_id,
-        service_id,
-        employee_id,
-        date,
-        time,
-        notes,
-        motivo
-      ]
+      [client_id, pet_id, service_id, employee_id, date, time, notes || null, motivo]
     );
 
     return { id: result.insertId, ...data, alta: 0 };
   },
 
   async update(id, data) {
-    const {
-      client_id,
-      pet_id,
-      service_id,
-      employee_id,
-      date,
-      time,
-      notes,
-      motivo
-    } = data;
+    const { client_id, pet_id, service_id, employee_id, date, time, notes, motivo } = data;
 
-    await db.query(
+    const [result] = await db.query(
       `UPDATE citas
        SET client_id=?, pet_id=?, service_id=?, employee_id=?, 
            date=?, time=?, notes=?, motivo=?
        WHERE id=?`,
-      [
-        client_id,
-        pet_id,
-        service_id,
-        employee_id,
-        date,
-        time,
-        notes,
-        motivo,
-        id
-      ]
+      [client_id, pet_id, service_id, employee_id, date, time, notes || null, motivo, id]
     );
 
-    return { id, ...data };
+    return { id, ...data, affectedRows: result.affectedRows };
   },
 
   async delete(id) {
-    await db.query("DELETE FROM citas WHERE id=?", [id]);
-    return { message: "Cita eliminada" };
+    const [result] = await db.query("DELETE FROM citas WHERE id=?", [id]);
+    return result;
   },
 
   async darDeAlta(id) {
