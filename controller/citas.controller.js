@@ -24,16 +24,27 @@ CitasController.get("/:id", async (req, res) => {
 
 CitasController.post("/", async (req, res) => {
   try {
-    const { client_id, pet_id, service_id, employee_id, date, time, motivo } = req.body;
+    console.log("Datos recibidos en el Body:", req.body);
 
-    if (!client_id || !pet_id || !service_id || !employee_id || !date || !time || !motivo) {
-      return res.status(400).json({ error: "Campos obligatorios faltantes" });
+    const { client_id, pet_id, service_id, employee_id, date, time, motivo, notes } = req.body;
+
+    const camposObligatorios = { client_id, pet_id, service_id, employee_id, date, time, motivo };
+    const faltantes = Object.keys(camposObligatorios).filter(key => !camposObligatorios[key]);
+
+    if (faltantes.length > 0) {
+      return res.status(400).json({
+        error: "Campos obligatorios faltantes",
+        campos_que_faltan: faltantes,
+        lo_que_llego: req.body
+      });
     }
 
     const nueva = await CitasModel.create(req.body);
     res.status(201).json(nueva);
+
   } catch (error) {
-    res.status(500).json({ error: "Error al crear la cita" });
+    console.error("ERROR EN POST CITAS:", error);
+    res.status(500).json({ error: "Error interno del servidor", detalles: error.message });
   }
 });
 
