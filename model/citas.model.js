@@ -3,11 +3,7 @@ import { db } from "./db.js";
 export const CitasModel = {
   async getAll() {
     const [rows] = await db.query(`
-      SELECT c.*,
-             cl.name AS client_name,
-             p.name AS pet_name,
-             e.name AS employee_name,
-             s.name AS service_name
+      SELECT c.*, cl.name AS client_name, p.name AS pet_name, e.name AS employee_name, s.name AS service_name
       FROM citas c
       LEFT JOIN clients cl ON c.client_id = cl.id
       LEFT JOIN pets p ON c.pet_id = p.id
@@ -18,50 +14,34 @@ export const CitasModel = {
     return rows;
   },
 
-  async getById(id) {
-    const [rows] = await db.query(
-      `SELECT c.*,
-              cl.name AS client_name,
-              p.name AS pet_name,
-              e.name AS employee_name,
-              s.name AS service_name
-       FROM citas c
-       LEFT JOIN clients cl ON c.client_id = cl.id
-       LEFT JOIN pets p ON c.pet_id = p.id
-       LEFT JOIN employees e ON c.employee_id = e.id
-       LEFT JOIN services s ON c.service_id = s.id
-       WHERE c.id = ?`,
-      [id]
-    );
-    return rows[0];
-  },
-
   async create(data) {
     const { client_id, pet_id, service_id, employee_id, date, time, notes } = data;
-
     const [result] = await db.query(
-      `INSERT INTO citas 
-       (client_id, pet_id, service_id, employee_id, date, time, notes) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO citas (client_id, pet_id, service_id, employee_id, date, time, notes) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [client_id, pet_id, service_id, employee_id, date, time, notes]
     );
+    return this.getById(result.insertId);
+  },
 
-    const newId = result.insertId;
+  async update(id, data) {
+    const { service_id, employee_id, date, time, notes } = data;
+    await db.query(
+      `UPDATE citas SET service_id = ?, employee_id = ?, date = ?, time = ?, notes = ? WHERE id = ?`,
+      [service_id, employee_id, date, time, notes, id]
+    );
+    return this.getById(id);
+  },
 
+  async getById(id) {
     const [rows] = await db.query(`
-      SELECT c.*,
-             cl.name AS client_name,
-             p.name AS pet_name,
-             e.name AS employee_name,
-             s.name AS service_name
+      SELECT c.*, cl.name AS client_name, p.name AS pet_name, e.name AS employee_name, s.name AS service_name
       FROM citas c
       LEFT JOIN clients cl ON c.client_id = cl.id
       LEFT JOIN pets p ON c.pet_id = p.id
       LEFT JOIN employees e ON c.employee_id = e.id
       LEFT JOIN services s ON c.service_id = s.id
       WHERE c.id = ?
-    `, [newId]);
-
+    `, [id]);
     return rows[0];
   },
 

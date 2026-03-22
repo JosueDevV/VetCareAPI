@@ -12,37 +12,22 @@ CitasController.get("/", async (req, res) => {
   }
 });
 
-CitasController.get("/:id", async (req, res) => {
-  try {
-    const row = await CitasModel.getById(req.params.id);
-    if (!row) return res.status(404).json({ error: "Cita no encontrada" });
-    res.json(row);
-  } catch (error) {
-    res.status(500).json({ error: "Error al obtener la cita" });
-  }
-});
-
 CitasController.post("/", async (req, res) => {
   try {
-    const { client_id, pet_id, service_id, employee_id, date, time, notes } = req.body;
-
-    if (!client_id || !pet_id || !service_id || !employee_id || !date || !time) {
-      return res.status(400).json({ error: "Campos obligatorios faltantes" });
-    }
-
-    const nueva = await CitasModel.create({
-      client_id,
-      pet_id,
-      service_id,
-      employee_id,
-      date,
-      time,
-      notes: notes || ""
-    });
-
+    const nueva = await CitasModel.create(req.body);
     res.status(201).json(nueva);
   } catch (error) {
     res.status(500).json({ error: "Error al crear la cita", detail: error.message });
+  }
+});
+
+CitasController.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const actualizada = await CitasModel.update(id, req.body);
+    res.json(actualizada);
+  } catch (error) {
+    res.status(500).json({ error: "Error al actualizar la cita", detail: error.message });
   }
 });
 
